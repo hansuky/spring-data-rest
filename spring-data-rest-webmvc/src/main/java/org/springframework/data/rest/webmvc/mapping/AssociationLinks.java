@@ -18,6 +18,7 @@ package org.springframework.data.rest.webmvc.mapping;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.rest.core.Path;
@@ -27,10 +28,13 @@ import org.springframework.data.rest.core.mapping.ResourceMetadata;
 import org.springframework.hateoas.Link;
 import org.springframework.util.Assert;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * A value object to for {@link Link}s representing an association.
  * 
  * @author Oliver Gierke
+ * @author Greg Turnquist
  * @since 2.1
  */
 public class AssociationLinks {
@@ -98,5 +102,32 @@ public class AssociationLinks {
 
 		metadata = mappings.getMappingFor(property.getActualType());
 		return metadata == null ? false : metadata.isExported();
+	}
+
+	/**
+	 * Returns whether the given property is an association that should be exported.
+	 *
+	 * @param property can be {@literal null}
+	 * @return
+	 */
+	public boolean isExportableAssociation(PersistentProperty<?> property) {
+
+		// If the property is null or not an association, it's not exportable
+		if (property == null || !property.isAssociation()) {
+			return false;
+		}
+
+		// If the "getter" has @JsonIgnore, then it's not an exportable relationship
+		if (AnnotationUtils.findAnnotation(property.getGetter(), JsonIgnore.class) != null) {
+			return false;
+		}
+
+		// If the property's field has @JsonIgnore, then it's not an exportable relationship
+		if (property.getField().getAnnotationsByType(JsonIgnore.class).length > 0) {
+			return false;
+		}
+
+		return true;
+
 	}
 }
