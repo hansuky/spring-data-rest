@@ -306,7 +306,7 @@ public class RootResourceInformationToAlpsDescriptorConverter {
 
 	private List<Descriptor> buildPropertyDescriptors(Class<?> type, final String baseRel) {
 
-		PersistentEntity<?, ?> entity = persistentEntities.getPersistentEntity(type);
+		final PersistentEntity<?, ?> entity = persistentEntities.getPersistentEntity(type);
 		final List<Descriptor> propertyDescriptors = new ArrayList<Descriptor>();
 		final JacksonMetadata jackson = new JacksonMetadata(mapper, type);
 		final PropertyMappings propertyMappings = new PropertyMappings(mappings);
@@ -338,7 +338,9 @@ public class RootResourceInformationToAlpsDescriptorConverter {
 
 				PersistentProperty<?> property = association.getInverse();
 
-				if (!associationLinks.isExportableAssociation(property)) {
+				JacksonMetadata jacksonMetadata = new JacksonMetadata(mapper, entity.getType());
+
+				if (!jacksonMetadata.isExportableProperty(property)) {
 					return;
 				}
 
